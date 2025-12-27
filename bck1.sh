@@ -20,8 +20,8 @@ fi
 # User check using id
 if ! id "$1" >/dev/null 2>&1; then
   echo "User '$1' does not exist. Exiting... "
-  exit 1
   echo
+  exit 1
 fi
 
 # Arg2 check
@@ -92,8 +92,8 @@ fi
 # Case 3 : file -> file (destination is tar; create if empty)
 if [[ -f "$2" && -f "$3" ]]; then
   if [[ ! -s "$3" ]]; then
-    tar -cf "$3" -- "$2"
-    echo "File '$3' was empty; created with '$2'."
+    printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"
+    echo "File '$3' was empty; It will be created at '$4'."
     echo
     exit 0
   fi
@@ -118,15 +118,16 @@ if [[ -f "$2" && -f "$3" ]]; then
 fi
 
 #####################################################################
-# Case 4: folder -> file (destination is tar; create if empty)
-if [[ -d "$2" && -f "$3" ]]; then
-  if [[ ! -s "$3" ]]; then
-    tar -cf "$3" -- "$2"
-    echo "File '$3' was empty; created with '$2'."
+# Case 4: folder -> tar file (destination is tar; create if empty)
+if [[ -d "$2" && -f "$3" ]]; then #IF directory & file:
+  if [[ ! -s "$3" ]]; then # if empty.
+    if printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"; then
+    echo "File '$3' was empty; it will be created at '$4'"
     echo
     exit 0
-  fi
 
+  fi
+fi
   if ! tar -tf "$3" >/dev/null 2>&1; then
     echo "File '$3' is not a tar archive. Exiting..."
     echo
