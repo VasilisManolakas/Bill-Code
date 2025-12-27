@@ -12,9 +12,10 @@ elif (( $# > 3 )); then
   echo "Too many Parameters Given. Exiting ... "
   exit 1
 fi
-# Parameter count ok.
 
-# User check
+# Parameter count ok, if reached this point.
+
+# User check using id
 if ! id "$1" >/dev/null 2>&1; then
   echo "User '$1' does not exist. Exiting... "
   exit 1
@@ -23,18 +24,24 @@ fi
 # Arg2 check
 if [[ -d "$2" ]]; then
   echo 'Second argument is a directory.'
+  echo
 elif [[ -f "$2" ]]; then
   echo 'Second argument is a file.'
+  echo
 else
   echo 'Second argument is neither a file, nor a directory. Script Failed! Exiting...'
+  echo
   exit 1
 fi
 
 # Arg3 check
 if [[ -d "$3" ]]; then
   echo 'Third argument is a directory.'
+  echo
+
 elif [[ -f "$3" ]]; then
   echo 'Third argument is a file.'
+  echo
   if tar -tf "$3" > /dev/null 2>&1; then
     echo "Third argument is a tar file."
     fi
