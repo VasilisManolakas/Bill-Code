@@ -92,10 +92,15 @@ fi
 # Case 3 : file -> file (destination is tar; create if empty)
 if [[ -f "$2" && -f "$3" ]]; then
   if [[ ! -s "$3" ]]; then
-    printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"
+    if printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"; then
     echo "File '$3' was empty; It will be created at '$4'."
     echo
     exit 0
+    else
+    echo 'Invalid time. Exiting...'
+    echo
+    exit 1
+    fi
   fi
 
   if ! tar -tf "$3" >/dev/null 2>&1; then
@@ -121,14 +126,19 @@ fi
 # Case 4: folder -> tar file (destination is tar; create if empty)
 if [[ -d "$2" && -f "$3" ]]; then #IF directory & file:
   if [[ ! -s "$3" ]]; then # if empty.
-    if printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"; then
-    echo "File '$3' was empty; it will be created at '$4'"
-    echo
-    exit 0
+    if printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"; then # Valid.
+        echo "File '$3' was empty; it will be created at '$4'"
+        echo
+        exit 0
+    else
+        echo 'Invalid time. Exiting...'
+        echo
+        exit 1
+     fi
+    fi
 
-  fi
-fi
-  if ! tar -tf "$3" >/dev/null 2>&1; then
+
+if ! tar -tf "$3" >/dev/null 2>&1; then # if file is not tar:
     echo "File '$3' is not a tar archive. Exiting..."
     echo
     exit 1
