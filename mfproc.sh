@@ -1,9 +1,9 @@
 #!/bin/bash
 printf "\n"
 printf "Script 3: mfproc\n"
-printf "Max args : 3\n"
-if (( $# > 3 )); then
-    printf "Maximum allowable parameters are 3. Exiting...\n"
+printf "Max args : 4\n"
+if (( $# > 4 )); then
+    printf "Maximum allowable parameters are 4. Exiting...\n"
     exit 1
 fi
 
@@ -55,4 +55,30 @@ state=$(grep -m1 '^State:' "$status" 2>/dev/null | cut -f2-)
     "$name" "$pid" "$ppid" "$uid" "$gid" "$state" "$write_locked_files" "$read_locked_files"
 fi
 done
+elif (( $# == 4 )) && [[ "$1" == "-u" ]] && [[ "$3" == "-s" ]] && id "$2" >/dev/null 2>&1; then
+  # Correct input: -u USER -s STATE
+  uuid=$(id -u "$2")  # user's UID
+
+  for directory in /proc/[0-9]*; do
+    pid=$(basename "$directory")
+    status="/proc/$pid/status"
+
+    process_uid=$(grep -m1 '^Uid:' "$status" 2>/dev/null | cut -f2) || continue
+    [[ "$process_uid" == "$uuid" ]] || continue
+
+    state=$(grep -m1 '^State:' "$status" 2>/dev/null | cut -f2 | cut -c1) || continue
+    [[ "$state" == "$4" ]] || continue   # $4 is S/R/Z
+
+    name=$(grep -m1 '^Name:' "$status" 2>/dev/null | cut -f2-)
+    ppid=$(grep -m1 '^PPid:' "$status" 2>/dev/null | cut -f2)
+    uid=$process_uid
+    gid=$(grep -m1 '^Gid:' "$status" 2>/dev/null | cut -f2)
+
+    printf "%-35.35s %7s %7s %7s %10s %-20.20s\n" \
+      "$name" "$pid" "$ppid" "$uid" "$gid" "$state"
+  done
+
+  exit 0
 fi
+
+
