@@ -10,7 +10,7 @@ printf "Args given: $#\n"
 printf "Usage: mfproc [-u username] [-s S|R|Z]"
 printf "\n"
 # 0 param
-if (( $# == 0 )); then
+if [[ $# == 0 || ( $# == 1 && ! $(id "$1" >/dev/null 2>&1; echo $?) -eq 0 ) ]]; then
 echo "No parameters given. Instead, all active processes of the operating system will be listed."
 printf "\n"
 cd /proc
@@ -31,10 +31,10 @@ for directory in /proc/[0-9]*; do
 done
 
 exit 0
-#1 param
-elif (( $# == 1 )); then
+#1 param && invalid user
+
 #  i will check for user validity here.
-if ! id "$1" >/dev/null 2>&1; then
+
 echo "User '$1' does not exist. Instead, all active processes of the operating system will be listed."
   exit 1
 #2 params
@@ -44,4 +44,4 @@ else
 
 exit 0
 fi
-fi
+
