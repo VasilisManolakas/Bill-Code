@@ -56,7 +56,7 @@ state=$(grep -m1 '^State:' "$status" 2>/dev/null | cut -f2-)
 fi
 done
 elif (( $# == 4 )) && [[ "$1" == "-u" ]] && [[ "$3" == "-s" ]] && id "$2" >/dev/null 2>&1; then
-  # Correct input: -u USER -s STATE
+  # Correct input: -u USER -s S
   uuid=$(id -u "$2")  # user's UID
 
   for directory in /proc/[0-9]*; do
