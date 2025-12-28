@@ -73,7 +73,7 @@ elif (( $# == 4 )) && [[ "$1" == "-u" ]] && [[ "$3" == "-s" ]] && id "$2" >/dev/
     ppid=$(grep -m1 '^PPid:' "$status" 2>/dev/null | cut -f2)
     uid=$process_uid
     gid=$(grep -m1 '^Gid:' "$status" 2>/dev/null | cut -f2)
-
+#
     printf "%-35.35s %7s %7s %7s %10s %-20.20s\n" \
       "$name" "$pid" "$ppid" "$uid" "$gid" "$state"
   done
