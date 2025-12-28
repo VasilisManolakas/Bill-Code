@@ -35,6 +35,24 @@ echo "User '$1' does not exist. Instead, all active processes of the operating s
 # If the user inputs a valid username: , the input will be ./mfproc.sh -u USERNAME. Therefore $1 = "u" & $2 = "USERNAME."So:
 elif  (( $# == 2 ))  &&  [[ "$1" == "-u" ]] &&  id "$2" >/dev/null 2>&1 ; then
 printf "1 parameter entered, and the user is valid."
-
-exit 0
+printf "Now we need to print each process the specific user is running.\n"
+user_id=$( id -u "$2" ) # now i have the specific user's ID
+#  now i need to iterate over each process, and check for this UID. if the UIDs match,
+#  i print the process. Sounds Simple.
+for directory in /proc/[0-9]*; do
+pid=$(basename "$directory")
+process_uid=$(grep -m1 '^Uid:' /proc/"$pid"/status | cut -f2)
+# the line above extracts real UID from all UIDs.
+if [[ "$process_uid" == "$user_id" ]]; then
+name=$(grep -m1 '^Name:' /proc/"$pid"/status) name=${name#Name:}
+    ppid=$(grep -m1 '^PPid:' /proc/"$pid"/status) ppid=${ppid#PPid:}
+    uid=$(grep -m1 '^Uid:'  /proc/"$pid"/status)  uid=${uid#Uid:}
+    gid=$(grep -m1 '^Gid:'  /proc/"$pid"/status)  gid=${gid#Gid:}
+    state=$(grep -m1 '^State:' /proc/"$pid"/status) state=${state#State:}
+    write_locked_files=$(grep -c 'WRITE' /proc/locks)
+    read_locked_files=$(grep -c 'READ' /proc/locks)
+    printf "%-35.35s %7s %7s %7s %10s %-20.20s %6s %6s\n" \
+    "$name" "$pid" "$ppid" "$uid" "$gid" "$state" "$write_locked_files" "$read_locked_files"
+fi
+done
 fi
