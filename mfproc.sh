@@ -32,9 +32,9 @@ done
 echo "User '$1' does not exist. Instead, all active processes of the operating system will be listed."
   exit 1
 # 1 param & valid user
-elif [[ $# == 1 && $(id "$1" >/dev/null 2>&1) ]]; then
+# If the user inputs a valid username: , the input will be ./mfproc.sh -u USERNAME. Therefore $1 = "u" & $2 = "USERNAME."So:
+elif  (( $# == 2 ))  &&  [[ "$1" == "-u" ]] &&  id "$2" >/dev/null 2>&1 ; then
 printf "1 parameter entered, and the user is valid."
-exit 0;
 
 exit 0
 fi
