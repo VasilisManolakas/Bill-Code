@@ -4,10 +4,20 @@ printf "\n"
 echo "--- Script 1: Searching ---"
 printf "\n"
 
-if (($#<2)); then
+if (( $# != 2 )); then
 echo "Two arguments must be given, or else the script will not run."
 printf "\n"
 echo "For integer arguments x and y, make sure that the script is executed as : ./searching.sh x y"
+exit 1
+fi
+
+if ! [[ "$1" =~ ^[0-7]{3,4}$ ]]; then
+echo "$1" is not an octal permission value. Exiting...
+exit 1
+fi
+
+if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+echo "$2" is not a valid number for days. Exiting...
 exit 1
 fi
 
@@ -64,7 +74,7 @@ echo
 printf '%s\n' "$command_output_4"
 (( c4 += command_counter_4 ))
 #5
-command_output_5=$(ls -l "$directory" | grep -E '^d.w[xs](.w[xs]...|....w[xt])')
+command_output_5=$(ls -l "$directory" | grep -E '^(d....w[xs]...|d.......w[xt])')
 command_counter_5=$(printf '%s\n' "$command_output_5" | grep -c .)
 echo "$command_counter_5 directories will be printed for question 5."
 echo
@@ -77,4 +87,4 @@ echo Case 1: $c1 tree files had octal right "$1".
 echo Case 2: $c2 tree files have been modified the last "$2" days.
 echo Case 3: $c3 subdirectories have been accessed in the last "$2" days.
 echo Case 4: $c4 files grant read rights to all users.
-echo Case 5: $c5 subdirectories grant create/rename/delete files permissions to other users in the system, other than the owner.
+echo "Case 5: $c5 subdirectories allow write/execute to group or others (not only the owner)".
