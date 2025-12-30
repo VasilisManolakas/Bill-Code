@@ -4,7 +4,7 @@ printf "\n"
 echo "--- Script 2 : bck1 ---"
 printf "\n"
 
-# argc == 3
+# argc == 4
 if (( $# < 4 )); then
   echo "Not Enough Parameters Given. Exiting... "
   echo
@@ -55,6 +55,16 @@ else
   exit 1
 fi
 
+# If reached this point, we have 3 args, the user is valid, arg 2 is either a file or a directory , and arg 3 is either a file or a directory.
+home=$(getent passwd "$1" | cut -d: -f6) # gives us the user's home.
+
+src=$(realpath "$2" 2>/dev/null)
+home=$(realpath "$home" 2>/dev/null)
+
+if [[ -z "$src" || -z "$home" || "$src" != "$home"/* ]]; then
+  echo "'$2' does not belong to the user. Exiting..."
+  exit 1
+fi
 #Check for 'at' time format validity
 # Probably won't need that.
 
@@ -136,7 +146,6 @@ if [[ -d "$2" && -f "$3" ]]; then #IF directory & file:
         exit 1
      fi
     fi
-
 
 if ! tar -tf "$3" >/dev/null 2>&1; then # if file is not tar:
     echo "File '$3' is not a tar archive. Exiting..."
