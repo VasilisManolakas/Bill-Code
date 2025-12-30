@@ -4,24 +4,19 @@ printf "\n"
 echo "--- Script 2 : bck ---"
 printf "\n"
 
-# argc == 3
-if (( $# < 3 )); then
-  echo "Not Enough Parameters Given. Exiting... "
-  exit 1
-elif (( $# > 3 )); then
-  echo "Too many Parameters Given. Exiting ... "
+# Arguments must be 3. (Username, file/folder, file/folder)
+if (( $# != 3 )); then
+  echo "3 parameters must be given. Exiting... "
   exit 1
 fi
-
-# Parameter count ok, if reached this point.
-
+  #Param 1 checks
 # User check using id
 if ! id "$1" >/dev/null 2>&1; then
   echo "User '$1' does not exist. Exiting... "
   exit 1
 fi
 
-# Arg2 check
+# Param 2 check
 if [[ -d "$2" ]]; then
   echo 'Second argument is a directory.'
   echo
@@ -34,7 +29,7 @@ else
   exit 1
 fi
 
-# Arg3 check
+# Param 3 check
 if [[ -d "$3" ]]; then
   echo 'Third argument is a directory.'
   echo
@@ -50,18 +45,22 @@ else
   exit 1
 fi
 
+# If reached this point, we have 3 args, the user is valid, arg 2 is either a file or a directory , and arg 3 is either a file or a directory.
+
 #####################################################################
-# Case 1 : file -> folder
+# Case 1 : file -> directory
 if [[ -f "$2" && -d "$3" ]]; then
-  tar -cvf "$3/backup.tar" -- "$2"
-  echo file "$2" copied as backup.tar to "$3" successfully. Exiting ...
+  echo "'$2' is a file and '$3' is a directory."
+  tar -cf "$3/backup.tar" -- "$2"
+  echo
+  echo file "$2" created as backup.tar and copied to "$3" successfully. Exiting ...
   exit 0
 fi
-
 #####################################################################
 # Case 2 : folder -> folder
 if [[ -d "$2" && -d "$3" ]]; then
   tar -cvf "$3/backup.tar" -- "$2"
+  echo
   echo Folder "$2" copied as backup.tar to "$3" successfully. Exiting ...
   exit 0
 fi
@@ -70,6 +69,7 @@ fi
 if [[ -f "$2" && -f "$3" ]]; then
   if [[ ! -s "$3" ]]; then
     tar -cf "$3" -- "$2"
+    echo
     echo "File '$3' was empty; created with '$2'."
     exit 0
   fi
@@ -90,6 +90,7 @@ if [[ -d "$2" && -f "$3" ]]; then
   if [[ ! -s "$3" ]]; then
     tar -cf "$3" -- "$2"
     echo "File '$3' was empty; created with '$2'."
+    echo
     exit 0
   fi
 
@@ -99,6 +100,7 @@ if [[ -d "$2" && -f "$3" ]]; then
   fi
 
   tar -rvf "$3" -- "$2"
+  echo
   echo Folder "$2" contents successfully appended to "$3". Exiting...
   exit 0
 fi
