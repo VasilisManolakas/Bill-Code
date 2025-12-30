@@ -46,6 +46,15 @@ else
 fi
 
 # If reached this point, we have 3 args, the user is valid, arg 2 is either a file or a directory , and arg 3 is either a file or a directory.
+home=$(getent passwd "$1" | cut -d: -f6) # gives us the user's home.
+
+src=$(realpath "$2" 2>/dev/null)
+home=$(realpath "$home" 2>/dev/null)
+
+if [[ -z "$src" || -z "$home" || "$src" != "$home"/* ]]; then
+  echo "'$2' does not belong to the user. Exiting..."
+  exit 1
+fi
 
 #####################################################################
 # Case 1 : file -> directory
@@ -67,35 +76,34 @@ fi
 #####################################################################
 # Case 3 : file -> file (destination is tar)
 if [[ -f "$2" && -f "$3" ]]; then
-  #if [[ ! -s "$3" ]]; then
-    #tar -cf "$3" -- "$2"
-    #echo
-    #echo "File '$3' was empty; created with '$2'."
-    #exit 0
-  #fi
+  if [[ ! -s "$3" ]]; then
+    tar -cf "$3" -- "$2"
+    echo
+    echo "File '$3' was empty; created with '$2'."
+    exit 0
+  fi
   if ! tar -tf "$3" >/dev/null 2>&1; then
     echo "file '$3' is not a tar file. Exiting..."
     exit 1
   fi
-  tar -rvf "$3" -- "$2"
+  tar -rf "$3" -- "$2"
   echo File "$2" successfully appended to "$3". Exiting...
   exit 0
 fi
 #####################################################################
 # Case 4: folder -> file (destination is tar; create if empty)
 if [[ -d "$2" && -f "$3" ]]; then
-  #if [[ ! -s "$3" ]]; then
-    #tar -cf "$3" -- "$2"
-    #echo "File '$3' was empty; created with '$2'."
-    #echo
-    #exit 0
-  #fi
+  if [[ ! -s "$3" ]]; then
+    tar -cf "$3" -- "$2"
+    echo "File '$3' was empty; created with '$2'."
+    echo
+    exit 0
+  fi
   if ! tar -tf "$3" >/dev/null 2>&1; then
     echo "File '$3' is not a tar archive. Exiting..."
     exit 1
   fi
-
-  tar -rvf "$3" -- "$2"
+  tar -rf "$3" -- "$2"
   echo
   echo Folder "$2" contents successfully appended to "$3". Exiting...
   exit 0
