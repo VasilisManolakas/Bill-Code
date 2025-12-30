@@ -59,41 +59,37 @@ fi
 #####################################################################
 # Case 2 : folder -> folder
 if [[ -d "$2" && -d "$3" ]]; then
-  tar -cvf "$3/backup.tar" -- "$2"
+  tar -cf "$3/backup.tar" -- "$2"
   echo
   echo Folder "$2" copied as backup.tar to "$3" successfully. Exiting ...
   exit 0
 fi
 #####################################################################
-# Case 3 : file -> file (destination is tar; create if empty)
+# Case 3 : file -> file (destination is tar)
 if [[ -f "$2" && -f "$3" ]]; then
-  if [[ ! -s "$3" ]]; then
-    tar -cf "$3" -- "$2"
-    echo
-    echo "File '$3' was empty; created with '$2'."
-    exit 0
-  fi
-
+  #if [[ ! -s "$3" ]]; then
+    #tar -cf "$3" -- "$2"
+    #echo
+    #echo "File '$3' was empty; created with '$2'."
+    #exit 0
+  #fi
   if ! tar -tf "$3" >/dev/null 2>&1; then
-    echo "file '$3' is not a tar file."
+    echo "file '$3' is not a tar file. Exiting..."
     exit 1
   fi
-
   tar -rvf "$3" -- "$2"
-  echo File "$2" successfully appended to "$3". Exiting ,,,
+  echo File "$2" successfully appended to "$3". Exiting...
   exit 0
 fi
-
 #####################################################################
 # Case 4: folder -> file (destination is tar; create if empty)
 if [[ -d "$2" && -f "$3" ]]; then
-  if [[ ! -s "$3" ]]; then
-    tar -cf "$3" -- "$2"
-    echo "File '$3' was empty; created with '$2'."
-    echo
-    exit 0
-  fi
-
+  #if [[ ! -s "$3" ]]; then
+    #tar -cf "$3" -- "$2"
+    #echo "File '$3' was empty; created with '$2'."
+    #echo
+    #exit 0
+  #fi
   if ! tar -tf "$3" >/dev/null 2>&1; then
     echo "File '$3' is not a tar archive. Exiting..."
     exit 1
@@ -104,7 +100,6 @@ if [[ -d "$2" && -f "$3" ]]; then
   echo Folder "$2" contents successfully appended to "$3". Exiting...
   exit 0
 fi
-
 # Fallback: any unhandled combination
 echo "Unsupported argument combination. Exiting..."
 exit 1
