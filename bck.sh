@@ -11,7 +11,7 @@ if (( $# != 3 )); then
 fi
   #Param 1 checks
 # User check using id
-if ! id "$1" >/dev/null 2>&1; then
+if ! id "$1" >/dev/null 2>&1; then #descriptor 1 -> stdout , descriptor 2-> stderr
   echo "User '$1' does not exist. Exiting... "
   exit 1
 fi
@@ -46,56 +46,57 @@ else
 fi
 
 # If reached this point, we have 3 args, the user is valid, arg 2 is either a file or a directory , and arg 3 is either a file or a directory.
+
 home=$(getent passwd "$1" | cut -d: -f6) # gives us the user's home.
 
-src=$(realpath "$2" 2>/dev/null)
+src=$(realpath "$2" 2>/dev/null)  # realpath ensures paths are canonical absolute paths.
 home=$(realpath "$home" 2>/dev/null)
 
-if [[ -z "$src" || -z "$home" || "$src" != "$home"/* ]]; then
+if [[ -z "$src" || -z "$home" || ( "$src" != "$home" && "$src" != "$home"/* ) ]]; then  # if source path or home path are empty strings, realpath failed. However, if src is not in /home, then src does not belong to /home.
   echo "'$2' does not belong to the user. Exiting..."
   exit 1
 fi
 
 #####################################################################
 # Case 1 : file -> directory
-if [[ -f "$2" && -d "$3" ]]; then
-  echo "'$2' is a file and '$3' is a directory."
-  tar -cf "$3/backup.tar" -- "$2"
+if [[ -f "$src" && -d "$3" ]]; then
+  echo "'$src' is a file and '$3' is a directory."
+  tar -cf "$3/backup.tar" -- "$src"
   echo
-  echo file "$2" created as backup.tar and copied to "$3" successfully. Exiting ...
+  echo file "$src" created as backup.tar and copied to "$3" successfully. Exiting ...
   exit 0
 fi
 #####################################################################
 # Case 2 : folder -> folder
-if [[ -d "$2" && -d "$3" ]]; then
-  tar -cf "$3/backup.tar" -- "$2"
+if [[ -d "$src" && -d "$3" ]]; then
+  tar -cf "$3/backup.tar" -- "$src"
   echo
-  echo Folder "$2" copied as backup.tar to "$3" successfully. Exiting ...
+  echo Folder "$src" copied as backup.tar to "$3" successfully. Exiting ...
   exit 0
 fi
 #####################################################################
 # Case 3 : file -> file (destination is tar)
-if [[ -f "$2" && -f "$3" ]]; then
-  if [[ ! -s "$3" ]]; then
-    tar -cf "$3" -- "$2"
+if [[ -f "$src" && -f "$3" ]]; then
+  if [[ ! -s "$3" ]]; then  # if file is empty, create it
+    tar -cf "$3" -- "$src"
     echo
-    echo "File '$3' was empty; created with '$2'."
+    echo "File '$3' was empty; created with '$src'."
     exit 0
   fi
   if ! tar -tf "$3" >/dev/null 2>&1; then
     echo "file '$3' is not a tar file. Exiting..."
     exit 1
   fi
-  tar -rf "$3" -- "$2"
-  echo File "$2" successfully appended to "$3". Exiting...
+  tar -rf "$3" -- "$src"
+  echo File "$src" successfully appended to "$3". Exiting...
   exit 0
 fi
 #####################################################################
 # Case 4: folder -> file (destination is tar; create if empty)
-if [[ -d "$2" && -f "$3" ]]; then
+if [[ -d "$src" && -f "$3" ]]; then
   if [[ ! -s "$3" ]]; then
-    tar -cf "$3" -- "$2"
-    echo "File '$3' was empty; created with '$2'."
+    tar -cf "$3" -- "$src"
+    echo "File '$3' was empty; created with '$src'."
     echo
     exit 0
   fi
@@ -103,9 +104,9 @@ if [[ -d "$2" && -f "$3" ]]; then
     echo "File '$3' is not a tar archive. Exiting..."
     exit 1
   fi
-  tar -rf "$3" -- "$2"
+  tar -rf "$3" -- "$src"
   echo
-  echo Folder "$2" contents successfully appended to "$3". Exiting...
+  echo Folder "$src" contents successfully appended to "$3". Exiting...
   exit 0
 fi
 # Fallback: any unhandled combination
