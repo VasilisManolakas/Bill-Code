@@ -8,9 +8,9 @@
 # Ερώτημα 1. Searching
 #
 #
-# Το script λειτουργεί μόνο αν δοθούν 2 ακέραιοι παράμετροι, όπως υπαγορεύει η εκφώνηση. Αν αυτό δεν ισχύει, το script τερματίζει μετά την #εκτύπωση κατάλληλων μηνυμάτων . Στην συνέχεια ελέγχεται αν το πρώτο όρισμα αποτελεί οκταδικό  permission. Δηλαδή ελέγχεται αν το πρώτο όρισμα #αποτελείται ΜΟΝΟ από ψηφία 0-7, τα οποία στο πλήθος μπορεί να είναι 3 ή 4. Σε κλασικές περιπτώσεις τα ψηφία είναι 3, ωστόσο μπορεί να υπάρχει #special bit ΜΠΡΟΣΤΑ από τον οκταδικό, π.χ. permission 4755 , special bit = 4.
+# Το script λειτουργεί μόνο αν δοθούν 2 ακέραιοι παράμετροι, όπως υπαγορεύει η εκφώνηση. Αν αυτό δεν ισχύει, το script τερματίζει μετά την #εκτύπωση κατάλληλων μηνυμάτων . Στην συνέχεια ελέγχεται αν το #πρώτο όρισμα αποτελεί οκταδικό  permission. Δηλαδή ελέγχεται αν το πρώτο όρισμα #αποτελείται ΜΟΝΟ από ψηφία 0-7, τα οποία στο πλήθος μπορεί να είναι 3 ή 4. Σε κλασικές περιπτώσεις τα ψηφία είναι 3, #ωστόσο μπορεί να υπάρχει #special bit ΜΠΡΟΣΤΑ από τον οκταδικό, π.χ. permission 4755 , special bit = 4.
 #Υπάρχουν τα bits : SUID, SGID, sticky. Οπότε το script τα λαμβάνει και αυτά υπ' όψην.
-#Έπειτα ελέγχεται αν το δεύτερο όρισμα (δηλαδή ο αριθμός ημερών) είναι έγκυρος. Δηλαδή ελέγχεται αν ο αριθμός είναι x-ψήφιος και αποτελείται ΜΟΝΟ #από ψηφία 0-9. Αν αυτό δεν ισχύει, το δεύτερο όρισμα δεν είναι έγκυρος αριθμός ημερών και τερματίζουμε.
+#Έπειτα ελέγχεται αν το δεύτερο όρισμα (δηλαδή ο αριθμός ημερών) είναι έγκυρος. Δηλαδή ελέγχεται αν ο αριθμός είναι x-ψήφιος και αποτελείται ΜΟΝΟ #από ψηφία 0-9. Αν αυτό δεν ισχύει, το δεύτερο όρισμα #δεν είναι έγκυρος αριθμός ημερών και τερματίζουμε.
 #
 # Στην συνέχεια εκτυπώνεται ο αριθμός των παραμέτρων στο τερματικό για να φαίνεται η ορθότητα των ορισμάτων που δόθηκαν.
 # Έπειτα έχουμε αρχικοποίηση 5 μετρητών με την τιμή 0. Οι πέντε αυτοί μετρητές (c1..c5) εμφανίζουν το πλήθος των αρχείων ή καταλόγων που έχουν #κάθε μία από τις ιδιότητες 1...5 που περιγράφονται στην εκφώνηση. Για παράδειγμα, ο μετρητής c1 δείχνει πόσα αρχεία έχουν την ιδιότητα 1, δηλαδή #είναι τα αρχεία που έχουν ως permissions το πρώτο όρισμα που δόθηκε στο script.
@@ -190,3 +190,453 @@ echo Case 3: $c3 subdirectories have been accessed in the last "$2" days.
 echo Case 4: $c4 files grant read rights to all users.
 echo "Case 5: $c5 subdirectories allow write/execute to group or others (not only the owner)".
 
+#Ερώτημα 2. bck
+# Το script λειτουργεί μόνο εάν δοθούν 3 παράμετροι. Πιο συγκεκριμένα:
+#Ελέγχεται η εγκυρότητα του χρήστη μέσω της εντολής id, και αν ο χρήστης δεν υπάρχει, το script τερματίζει. Διαφορετικά συνεχίζει. 
+# Στην συνέχεια, ελέγχεται αν οι παράμετροι 2,3 αποτελούν αρχείο ή κατάλογο και εκτυπώνεται αντίστοιχο μήνυμα σε κάθε περίπτωση για λόγους ευκρίνειας.
+# Έπειτα, γίνεται λήψη του home του χρήστη, παίρνοντας το passwd entry του λογαριασμού του και , μέσω cut, αποκόπτουμε το 6ο πεδίο με delimiter ":". 
+# Στην συνέχεια γίνεται κανονικοποίηση του 2ου ορίσματος μέσω της realpath και το αποτέλεσμα αποθηκεύεται στην $src. Eξασφαλίζουμε σωστό absolute path. Ομοίως κάνουμε το ίδιο για την εύρεση του absolute path του home directory.
+# Αν οποιοσδήποτε από τους κανονικοποιημένους καταλόγους src / home είναι άδειος (-z, δηλαδή μηδενικό μέγεθος string) , ή Το src δεν ανήκει στο home του χρήστη, το script τερματίζει.
+# Στην συνέχεια γίνονται οι έλεγχοι για το είδος των ορισμάτων $2, $3. Σε αυτό το σημείο ο χρήστης υπάρχει συνεπώς οι περιπτώσεις είναι 4. Είτε το script να λαμβάνει χρήστη, αρχείο και κατάλογο, είτε χρήστη και κατάλογο και κατάλογο, είτε χρήστη , αρχείο και αρχείο, είτε χρήστη, κατάλογο και αρχείο.
+
+#Για χρήστη, αρχείο και κατάλογο, γίνεται αρχικά ο κατάλληλος έλεγχος για να σιγουρευτεί πως βρισκόμαστε σε αυτή την περίπτωση, με τον έλεγχο -f "$src" && -d "$3". 
+# Σε αυτή την περίπτωση δημιουργείται αντίγραφο του src με τη χρήση εντολής tar το οποίο αποθηκεύεται μέσα στον κατάλογο που υποδεικνύει το τρίτο όρισμα.
+
+# Για χρήστη, κατάλογο και κατάλογο, με τον ίδιο τρόπο ελέγχουμε αν τα τελευταία δύο ορίσματα αποτελούν 2 καταλόγους και δημιουργείται backup του πρώτου καταλόγου το οποίο αποθηκεύεται στον δεύτερο μέσω tar.
+
+# Για χρήστη , αρχείο και αρχείο, ελέγχεται αν τα 2 τελευταία ορίσματα αποτελούν αρχεία με αντίστοιχο τρόπο, και, γίνεται η υπόθεση πως το τρίτο αρχείο αποτελεί tar, ώστε να δουλέψει η επιλογή append που η εντολή μας προσφέρει. Αν το αρχείο είναι άδειο, τότε αυτό δημιουργείται και αποθηκεύεται το αρχείο του δεύτερου ορίσματος στο δημιουργηθέν tar. Έπειτα γίνεται έλεγχος για το αν το αρχείο που ορίζει το $3 είναι τύπου tar. Αν δεν είναι, το script τερματίζει. Διαφορετικά γίνεται append του 2ου ορίσματος στο tar file. 
+
+# Για χρήστη, κατάλογο και αρχείο, γίνεται ξανά ο έλεγχος πως το αρχείο αποτελεί tar, και αν είναι άδειο. Αν όλοι οι έλεγχοι περαστούν, γίνεται append του καταλόγου στο tar file που υποδεικνύει το τρίτο όρισμα. 
+
+# Στην συνέχεια παρατίθεται το script bck.sh:
+#!/bin/bash
+
+printf "\n"
+echo "--- Script 2 : bck ---"
+printf "\n"
+
+# Arguments must be 3. (Username, file/folder, file/folder)
+if (( $# != 3 )); then
+  echo "3 parameters must be given. Exiting... "
+  exit 1
+fi
+  #Param 1 checks
+# User check using id
+if ! id "$1" >/dev/null 2>&1; then #descriptor 1 -> stdout , descriptor 2-> stderr
+  echo "User '$1' does not exist. Exiting... "
+  exit 1
+fi
+
+# Param 2 check
+if [[ -d "$2" ]]; then
+  echo 'Second argument is a directory.'
+  echo
+elif [[ -f "$2" ]]; then
+  echo 'Second argument is a file.'
+  echo
+else
+  echo 'Second argument is neither a file, nor a directory. Script Failed! Exiting...'
+  echo
+  exit 1
+fi
+
+# Param 3 check
+if [[ -d "$3" ]]; then
+  echo 'Third argument is a directory.'
+  echo
+
+elif [[ -f "$3" ]]; then
+  echo 'Third argument is a file.'
+  echo
+  if tar -tf "$3" > /dev/null 2>&1; then
+    echo "Third argument is a tar file."
+    fi
+else
+  echo 'Third argument is neither a file, nor a directory. Exiting... '
+  exit 1
+fi
+
+# If reached this point, we have 3 args, the user is valid, arg 2 is either a file or a directory , and arg 3 is either a file or a directory.
+
+home=$(getent passwd "$1" | cut -d: -f6) # gives us the user's home.
+
+src=$(realpath "$2" 2>/dev/null)  # realpath ensures paths are canonical absolute paths.
+home=$(realpath "$home" 2>/dev/null)
+
+if [[ -z "$src" || -z "$home" || ( "$src" != "$home" && "$src" != "$home"/* ) ]]; then  # if source path or home path are empty strings, realpath failed. However, if src is not in /home, then src does not belong to /home.
+  echo "'$2' does not belong to the user. Exiting..."
+  exit 1
+fi
+
+#####################################################################
+# Case 1 : file -> directory
+if [[ -f "$src" && -d "$3" ]]; then
+  echo "'$src' is a file and '$3' is a directory."
+  tar -cf "$3/backup.tar" -- "$src"
+  echo
+  echo file "$src" created as backup.tar and copied to "$3" successfully. Exiting ...
+  exit 0
+fi
+#####################################################################
+# Case 2 : folder -> folder
+if [[ -d "$src" && -d "$3" ]]; then
+  tar -cf "$3/backup.tar" -- "$src"
+  echo
+  echo Folder "$src" copied as backup.tar to "$3" successfully. Exiting ...
+  exit 0
+fi
+#####################################################################
+# Case 3 : file -> file (destination is tar)
+if [[ -f "$src" && -f "$3" ]]; then
+  if [[ ! -s "$3" ]]; then  # if file is empty, create it
+    tar -cf "$3" -- "$src"
+    echo
+    echo "File '$3' was empty; created with '$src'."
+    exit 0
+  fi
+  if ! tar -tf "$3" >/dev/null 2>&1; then
+    echo "file '$3' is not a tar file. Exiting..."
+    exit 1
+  fi
+  tar -rf "$3" -- "$src"
+  echo File "$src" successfully appended to "$3". Exiting...
+  exit 0
+fi
+#####################################################################
+# Case 4: folder -> file (destination is tar; create if empty)
+if [[ -d "$src" && -f "$3" ]]; then
+  if [[ ! -s "$3" ]]; then
+    tar -cf "$3" -- "$src"
+    echo "File '$3' was empty; created with '$src'."
+    echo
+    exit 0
+  fi
+  if ! tar -tf "$3" >/dev/null 2>&1; then
+    echo "File '$3' is not a tar archive. Exiting..."
+    exit 1
+  fi
+  tar -rf "$3" -- "$src"
+  echo
+  echo Folder "$src" contents successfully appended to "$3". Exiting...
+  exit 0
+fi
+# Fallback: any unhandled combination
+echo "Unsupported argument combination. Exiting..."
+exit 1
+
+
+# Ερώτημα 2.1 : bck1
+
+# Το συγκεκριμένο script αποτελεί παραλλαγή του bck, με την μόνη διαφορά πως το bck1 εκτελεί χρονοπρογραμματισμένα backups μέσω της εντολής at, όπου η ώρα
+# κατά την οποία ο χρήστης επιθυμεί να δημιουργηθεί το tar αρχείο δίνεται ως 4ο όρισμα.
+# Μετά από όλους τους ελέγχους του script bck για τα ορίσματα, η μοναδική διαφορά είναι πως, στην εντολή δημιουργίας του tar αντιγράφου, προσαρμόζουμε για 
+# την συμπεριφορά της at. Ως γνωστόν, η at λαμβάνει δεδομένα από stdin. Συνεπώς κάνουμε printf την εκάστοτε εντολή tar και κάνουμε pipe την έξοδο στην at. 
+# Π.χ, για την περίπτωση κατάλογος -> κατάλογος:
+# if printf 'tar -rf %q -- %q\n' "$3" "$src" | at "$4"; then
+# echo 'Valid time. Success'
+# echo
+# echo File "$src" will be appended to "$3" at "$4". Exiting ...
+
+# Ακολουθεί το script bck1.sh:
+
+#!/bin/bash
+
+printf "\n"
+echo "--- Script 2 : bck1 ---"
+printf "\n"
+
+# argc == 4
+if (( $# < 4 )); then
+  echo "Not Enough Parameters Given. Exiting... "
+  echo
+  exit 1
+elif (( $# > 4 )); then
+  echo "Too many Parameters Given. Exiting ... "
+  echo
+  exit 1
+fi
+
+# Parameter count ok, if reached this point.
+
+# User check using id
+if ! id "$1" >/dev/null 2>&1; then
+  echo "User '$1' does not exist. Exiting... "
+  echo
+  exit 1
+fi
+
+# Arg2 check
+if [[ -d "$2" ]]; then
+  echo 'Second argument is a directory.'
+  echo
+elif [[ -f "$2" ]]; then
+  echo 'Second argument is a file.'
+  echo
+else
+  echo 'Second argument is neither a file, nor a directory. Script Failed! Exiting...'
+  echo
+  exit 1
+fi
+
+# Arg3 check
+if [[ -d "$3" ]]; then
+  echo 'Third argument is a directory.'
+  echo
+
+elif [[ -f "$3" ]]; then
+  echo 'Third argument is a file.'
+  echo
+  if tar -tf "$3" > /dev/null 2>&1; then
+    echo "Third argument is a tar file."
+    echo
+    fi
+else
+  echo 'Third argument is neither a file, nor a directory. Exiting... '
+  echo
+  exit 1
+fi
+
+# If reached this point, we have 3 args, the user is valid, arg 2 is either a file or a directory , and arg 3 is either a file or a directory.
+home=$(getent passwd "$1" | cut -d: -f6) # gives us the user's home.
+
+src=$(realpath "$2" 2>/dev/null)
+home=$(realpath "$home" 2>/dev/null)
+
+if [[ -z "$src" || -z "$home" || "$src" != "$home"/* ]]; then
+  echo "'$2' does not belong to the user. Exiting..."
+  exit 1
+fi
+#Check for 'at' time format validity
+# Probably won't need that.
+
+#####################################################################
+# Case 1 : file -> folder
+if [[ -f "$2" && -d "$3" ]]; then
+  if printf 'tar -cvf %q -- %q\n' "$3/backup.tar" "$2" | at "$4"; then
+  echo 'Valid time. Success'
+  echo
+  echo file "$2" will be copied as backup.tar to "$3" at "$4". Exiting ...
+  echo
+  exit 0
+  else
+  echo 'Invalid time. Exiting...'
+  echo
+  exit 1
+  fi
+fi
+#####################################################################
+# Case 2 : folder -> folder
+if [[ -d "$2" && -d "$3" ]]; then
+  if printf 'tar -cvf %q -- %q \n' "$3/backup.tar" "$2" | at "$4"; then
+  echo 'Valid time. Success'
+  echo
+  else
+  echo 'Invalid time. exiting...'
+  echo
+  exit 1
+  fi
+  echo Folder "$2" will be copied as backup.tar to "$3" at "$4". Exiting ...
+  echo
+  exit 0
+fi
+#####################################################################
+# Case 3 : file -> file (destination is tar; create if empty)
+if [[ -f "$2" && -f "$3" ]]; then
+  if [[ ! -s "$3" ]]; then
+    if printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"; then
+    echo "File '$3' was empty; It will be created at '$4'."
+    echo
+    exit 0
+    else
+    echo 'Invalid time. Exiting...'
+    echo
+    exit 1
+    fi
+  fi
+
+  if ! tar -tf "$3" >/dev/null 2>&1; then
+    echo "file '$3' is not a tar file."
+    echo
+    exit 1
+  fi
+
+  if printf 'tar -rvf %q -- %q \n' "$3" "$2" | at "$4"; then
+  echo 'Valid time. Success'
+  echo
+  echo File "$2" will be appended to "$3" at "$4". Exiting ...
+  echo
+  exit 0
+  else
+  echo 'Invalid time.'
+  echo
+  exit 1
+  fi
+fi
+
+#####################################################################
+# Case 4: folder -> tar file (destination is tar; create if empty)
+if [[ -d "$2" && -f "$3" ]]; then #IF directory & file:
+  if [[ ! -s "$3" ]]; then # if empty.
+    if printf 'tar -cf %q -- %q\n' "$3" "$2" | at "$4"; then # Valid.
+        echo "File '$3' was empty; it will be created at '$4'"
+        echo
+        exit 0
+    else
+        echo 'Invalid time. Exiting...'
+        echo
+        exit 1
+     fi
+    fi
+
+if ! tar -tf "$3" >/dev/null 2>&1; then # if file is not tar:
+    echo "File '$3' is not a tar archive. Exiting..."
+    echo
+    exit 1
+  fi
+
+  if printf 'tar -rvf %q -- %q\n' "$3" "$2" | at "$4"; then
+  echo 'Valid time, Success.'
+  echo
+  echo Folder "$2" contents will be appended to "$3" at "$4". Exiting...
+  echo
+  exit 0
+  else
+  echo 'Invalid time'
+  exit 1
+  fi
+fi
+
+# Fallback: any unhandled combination
+echo "Unsupported argument combination. Exiting..."
+exit 1
+
+# Ερώτημα 2.2.  bck2
+# Το bck2 αποτελεί παραλλαγή του bck , όπου με την χρήση cron δημιουργούμε αντίγραφο του current working directory που χρησιμοποιούμε στο /tmp, κάθε Κυριακή στις 11 μ.μ για τους επόμενους έξι μήνες, χωρίς την λήψη ορισμάτων.
+# Αρχικά, γίνεται έλεγχος για 0 ορίσματα, λαμβάνουμε το working directory μέσω pwd, κρατάμε μόνο τον τρέχοντα κατάλογο εργασίας ως το basename του current working directory, και το γονικό κατάλογο του working directory μέσω dirname. 
+# Με την παρακάτω εντολή, αν parent = ο γονικός κατάλογος του working directory, και base o κατάλογος που μας ενδιαφέρει, κάνουμε cd στον parent και δημιουργούμε το αντίγραφο του base στο /tmp/{base}.tar, όπου το τελικό tar αρχείο θα έχει όνομα "όνομα_base".tar.
+
+ tar -C "$parent" -cf "/tmp/${base}.tar" "$base" || exit 1
+
+# Με την script_path="$(realpath "$0")" 
+task="0 23 * * 0 cd \"$wd\" && /bin/bash \"$script_path\" >> /tmp/bck2.log 2>&1" echo "$task" | crontab -, γίνεται το κατάλληλο job την καθορισμένη ώρα (23 " 11 μ.μ.) και το script θα εκτελείται κάθε φορά από cron εκείνη τη περίοδο.
+
+#Ακολουθεί η υλοποίηση:
+#!/bin/bash
+
+printf "\n"
+echo "--- Script 2 : bck2 ---"
+printf "\n"
+
+if (( $# != 0 )); then
+  echo "No parameters must be given. Exiting..."
+  echo
+  exit 1
+fi
+
+wd="$(pwd)"
+base="$(basename "$wd")"
+parent="$(dirname "$wd")"
+
+tar -C "$parent" -cf "/tmp/${base}.tar" "$base" || exit 1
+
+# build cron job using dirname (workdir) and the absolute path of this script
+script_path="$(realpath "$0")"
+task="0 23 * * 0 cd \"$wd\" && /bin/bash \"$script_path\" >> /tmp/bck2.log 2>&1"
+
+echo "$task" | crontab -
+
+exit 0
+ 
+
+# Ερώτημα 3. mfproc 
+#Το mfproc δέχεται έως 4 ορίσματα και υποστηρίζει τις μορφές εκτέλεσης: (α) χωρίς ορίσματα, (β) -u USER, (γ) -u USER -s S|R|Z. Αν δοθούν περισσότερα από 4 #ορίσματα, τερματίζει με μήνυμα. Για την εξαγωγή διεργασιών διατρέχει τους καταλόγους /proc/[0-9]*, παίρνει το PID από το basename του κάθε καταλόγου και #διαβάζει το /proc/<PID>/status. Από το status εξάγει τις γραμμές Name:, PPid:, Uid:, Gid:, State: με grep -m1 και απομονώνει τις τιμές (π.χ. με cut -f2 ή #αφαίρεση prefix). Η έξοδος μορφοποιείται με printf σε σταθερά πλάτη πεδίων ώστε να εμφανίζονται στήλες (name, pid, ppid, uid, gid, state). Στην εκτέλεση #χωρίς ορίσματα, τυπώνει μία γραμμή ανά PID χωρίς πρόσθετο φιλτράρισμα. Επιπλέον υπολογίζει δύο μετρητές από το /proc/locks με grep -c 'WRITE' και grep -c #'READ' και τους εμφανίζει μαζί με κάθε γραμμή εξόδου ως συνολικές μετρήσεις συστήματος (όχι ανά PID). Στην εκτέλεση -u USER γίνεται έλεγχος ύπαρξης χρήστη #με id και υπολογίζεται το UID του χρήστη με id -u USER· στη συνέχεια για κάθε PID εξάγεται το real UID της διεργασίας (2ο πεδίο της γραμμής Uid:) και #γίνεται σύγκριση με το UID του USER, οπότε τυπώνονται μόνο οι διεργασίες που ταιριάζουν. Στην εκτέλεση -u USER -s S|R|Z εφαρμόζεται επιπλέον φίλτρο #κατάστασης: από τη γραμμή State: λαμβάνεται ο πρώτος χαρακτήρας (S/R/Z) και γίνεται σύγκριση με την τιμή του ορίσματος, οπότε τυπώνονται μόνο οι διεργασίες #του USER που βρίσκονται στην ζητούμενη κατάσταση.
+
+#!/bin/bash
+printf "\n"
+printf "Script 3: mfproc\n"
+printf "Max args : 4\n"
+if (( $# > 4 )); then
+    printf "Maximum allowable parameters are 4. Exiting...\n"
+    exit
+fi
+# 4 Cases:
+#0 params -> print every process
+#1 param -> could be either username or process state .
+#2 params -> both username and states given.
+printf "Number of args given: $#\n"
+printf "Use as: mfproc [-u username] [-s S|R|Z]"
+printf "\n"
+
+# 0 param or 1 param and invalid user
+if [[ $# == 0 || ( $# == 2 && ! $(id "$2" >/dev/null 2>&1; ) ) ]]; then
+    echo "No parameters given, or, the user '$2' is invalid. Instead, all active processes of the operating system will be listed."
+    printf "\n"
+    cd /proc
+    find /proc -maxdepth 1 -type d -name '[0-9]*' > /dev/null 2>&1  #this finds all processes running on the OS.
+for directory in /proc/[0-9]*; do
+    pid=$(basename "$directory")
+    # cat /proc/"$pid"/status > /dev/null 2>&1 #now i have access to the pid's status txt file.
+    name=$(grep -m1 '^Name:' /proc/"$pid"/status) name=${name#Name:}
+    ppid=$(grep -m1 '^PPid:' /proc/"$pid"/status) ppid=${ppid#PPid:}
+    uid=$(grep -m1 '^Uid:'  /proc/"$pid"/status)  uid=${uid#Uid:}
+    gid=$(grep -m1 '^Gid:'  /proc/"$pid"/status)  gid=${gid#Gid:}
+    state=$(grep -m1 '^State:' /proc/"$pid"/status) state=${state#State:}
+    write_locked_files=$(grep -c 'WRITE' /proc/locks)
+    read_locked_files=$(grep -c 'READ' /proc/locks)
+    printf "%-35.35s %7s %7s %7s %10s %-20.20s %6s %6s\n" \
+    "$name" "$pid" "$ppid" "$uid" "$gid" "$state" "$write_locked_files" "$read_locked_files"
+done
+if (( $# == 2 ))  && !  id "$2" >/dev/null 2>&1; then
+  exit 1  # Non existent user
+elif (( $# == 0 )); then
+  exit 0
+fi
+  return 1
+# 1 param & valid user
+# If the user inputs a valid username: , the input will be ./mfproc.sh -u USERNAME. Therefore $1 = "u" & $2 = "USERNAME."So:
+elif  (( $# == 2 ))  &&  [[ "$1" == "-u" ]] &&  id "$2" >/dev/null 2>&1 ; then
+printf "1 parameter entered, -u entered, and the user '$2' is valid and exists.\n"
+printf "Now we need to print each process that '$2' running.\n\n"
+user_id=$( id -u "$2" ) # now i have the specific user's ID
+#  now i need to iterate over each process, and check for this UID. if the UIDs match,
+#  i print the process. Sounds Simple.
+for directory in /proc/[0-9]*; do
+pid=$(basename "$directory")
+process_uid=$(grep -m1 '^Uid:' /proc/"$pid"/status | cut -f2)
+# the line above extracts real UID from all UIDs.
+if [[ "$process_uid" == "$user_id" ]]; then
+status="/proc/$pid/status"
+name=$(grep -m1 '^Name:'  "$status" 2>/dev/null | cut -f2-)
+ppid=$(grep -m1 '^PPid:'  "$status" 2>/dev/null | cut -f2)
+uid=$( grep -m1 '^Uid:'   "$status" 2>/dev/null | cut -f2)   # real UID only
+gid=$( grep -m1 '^Gid:'   "$status" 2>/dev/null | cut -f2)   # real GID only
+state=$(grep -m1 '^State:' "$status" 2>/dev/null | cut -f2-)
+    printf "%-35.35s %7s %7s %7s %10s %-20.20s %6s %6s\n" \
+    "$name" "$pid" "$ppid" "$uid" "$gid" "$state" "$write_locked_files" "$read_locked_files"
+fi
+done
+elif (( $# == 4 )) && [[ "$1" == "-u" ]] && [[ "$3" == "-s" ]] && id "$2" >/dev/null 2>&1; then
+  # Correct input: -u USER -s S|R|Z
+  uuid=$(id -u "$2")  # user's UID
+
+  for directory in /proc/[0-9]*; do
+    pid=$(basename "$directory")
+    status="/proc/$pid/status"
+
+    process_uid=$(grep -m1 '^Uid:' "$status" 2>/dev/null | cut -f2) || continue
+    [[ "$process_uid" == "$uuid" ]] || continue
+
+    state=$(grep -m1 '^State:' "$status" 2>/dev/null | cut -f2 | cut -c1) || continue
+    [[ "$state" == "$4" ]] || continue   # $4 is S/R/Z
+
+    name=$(grep -m1 '^Name:' "$status" 2>/dev/null | cut -f2-)
+    ppid=$(grep -m1 '^PPid:' "$status" 2>/dev/null | cut -f2)
+    uid=$process_uid
+    gid=$(grep -m1 '^Gid:' "$status" 2>/dev/null | cut -f2)
+#
+    printf "%-35.35s %7s %7s %7s %10s %-20.20s\n" \
+      "$name" "$pid" "$ppid" "$uid" "$gid" "$state"
+  done
+
+  exit 0
+fi
