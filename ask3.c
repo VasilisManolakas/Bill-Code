@@ -146,3 +146,18 @@ list *createListwithStudents(list *l, int seme){
     }
 return ls;
 }
+
+void printSem(list *l, int semester){
+    node * traverser = (node*)malloc(sizeof(int));
+    if (traverser == NULL)
+        return;
+    traverser = l->head;
+    list *ls;
+    initList(ls);
+    while (traverser)
+    {
+        if (traverser->s->sem == semester)
+            printf("%s\t %s\n",traverser->s->rn, traverser->s->sn);
+            traverser = traverser->next;
+    }
+}
